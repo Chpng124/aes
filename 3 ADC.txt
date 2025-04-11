@@ -95,14 +95,11 @@ digital_val = = (LPC_ADC0->DR[1] >> 6) & 0x3FF;
  while (1) {
  ADC_StartCnv();
  adcVal = ADC_GetVal();
- if (adcVal !=-1) {
  sprintf(acBuf, "%d", adcVal);
  GLCD_SetTextColor(Red);
- GLCD_DisplayString(4, 0, 1, "
- ");
  GLCD_DisplayString(4, 0, 1, acBuf);
  delay_ms(300);
- }
+ 
  }
  }
                      // Listing 6: Demo.c
