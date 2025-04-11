@@ -105,11 +105,11 @@ __task void glcddisplay(void)
 __task void init(void)
 {
 	os_mut_init(&mut_glcd);
-	t_phaseA = os+tsk_create(phaseA,0);
-	t_phaseB = os+tsk_create(phaseB,0);
-	t_phaseC = os+tsk_create(phaseC,0);
-	t_phaseD = os+tsk_create(phaseD,0);
-	t_GLCD = os+tsk_create(glcddisplay,0);
+	t_phaseA = os_tsk_create(phaseA,0);
+	t_phaseB = os_tsk_create(phaseB,0);
+	t_phaseC = os_tsk_create(phaseC,0);
+	t_phaseD = os_tsk_create(phaseD,0);
+	t_GLCD = os_tsk_create(glcddisplay,0);
 	os_evt_set(0x0001,t_phaseA);
 	os_tsk_delete_self();
 }
