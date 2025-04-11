@@ -1,0 +1,89 @@
+ Writeanapplicationprogramto interfaceLEDs andpushbuttons toGPIOsofLPC1857
+ cortexM3evaluationboardanddemonstratepolling-basedIOoperation. Theboardissup
+portedwitharowof8LEDs. UsepushbuttontriggereventtoturnonLEDs inasequence
+ startingfromfirstandturnofffromlastLED.Developsoftware functionstogeneratedelay
+ andapplicationcodetorealizeLEDflasher.DevelopsuitableLEDdriverfunctions.
+
+
+ #include <LPC18xx.h>
+ #include "LED.h"
+ #define NUM_LEDS 8
+ const uint32_t led_mask[] = { 1UL << 14,
+ 1UL << 13,
+ 1UL << 12,
+ 1UL << 28,
+ 1UL << 27,
+ 1UL << 26,
+ 1UL << 25,
+ 1UL << 24 };
+ #define CCU_CLK_CFG_RUN (1 << 0)
+ #define CCU_CLK_CFG_AUTO (1 << 1)
+ #define CCU_CLK_STAT_RUN (1 << 0)
+ void LED_Init(void){
+ LPC_CCU1->CLK_M3_GPIO_CFG=(CCU_CLK_CFG_RUN|CCU_CLK_CFG_AUTO);
+ while((LPC_CCU1->CLK_M3_GPIO_STAT & CCU_CLK_STAT_RUN)==0);
+ LPC_SCU->SFSP9_0=0;
+ LPC_SCU->SFSP9_1=0;
+ LPC_SCU->SFSP9_2=0;
+ LPC_GPIO_PORT->DIR[4]|=(led_mask[0]|led_mask[1]|led_mask[2]);
+ LPC_SCU->SFSPD_10=4;
+ LPC_SCU->SFSPD_11=4;
+ LPC_SCU->SFSPD_12=4;
+ LPC_SCU->SFSPD_13=4;
+ LPC_SCU->SFSPD_14=4;
+ LPC_GPIO_PORT->DIR[6]|=(led_mask[3]|led_mask[4]|led_mask[5]|led_mask[6]|led_mask[7]);
+ }
+ void LED_On(uint32_t num){
+ if(num<3)
+ LPC_GPIO_PORT->SET[4]=led_mask[num];
+ else
+ LPC_GPIO_PORT->SET[6]=led_mask[num];
+ }
+ void LED_Off(uint32_t num){
+ if(num<3)
+ LPC_GPIO_PORT->CLR[4]=led_mask[num];
+ else
+ LPC_GPIO_PORT->CLR[6]=led_mask[num];
+ }
+
+
+
+// Blink .c
+
+
+#include <LPC18xx.h>
+ #include "LED.h"
+ #define NUM_LEDS 8
+ void delay(unsigned int temp){
+ unsigned int j,k;
+ for(j=0;j<temp;j++)
+ for(k=0;k<500;k++);
+ return;
+ }
+ void KEY_Init(){
+ LPC_SCU-> SFSP4_0=0|1<<6 ;
+ LPC_SCU-> SFSP4_3=0|1<<6;
+ LPC_SCU-> SFSP4_4=0|1<<6;
+ LPC_GPIO_PORT->DIR[2]&=0xFFFFFFE6;
+ }
+ int main(void){
+ int32_t num=0;
+ LED_Init();
+ KEY_Init();
+ while(1){
+ if((LPC_GPIO_PORT->PIN[2]&8)==0){
+ while(num<=7){
+ LED_On(num);
+ delay(50000);
+ num++;
+ }
+ num=7;
+ while(num>=0){
+ LED_Off(num);
+ delay(50000);
+ num--;
+ }
+ num=0;
+ }
+ }
+ }
