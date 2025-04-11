@@ -1,0 +1,137 @@
+6 Mutex
+ Createamultitaskingprogramtodemonstratetasksynchronization.Task1isexpectedtodis
+playanLEDandanequivalentLEDblinkingpatternonGLCD,whileTask2displaysatextual
+ messageonGLCD.SynchronizeaccesstotheGLCDusingmutexAPIsofRL-RTX.
+
+   // code
+ #include <RTL.h>
+ #include <LPC18xx.h>
+ #include "GLCD.h"
+ #include "LED.h"
+ OS_TID t_phaseA;
+ OS_TID t_lcd;
+ OS_MUT mut_GLCD;
+ #define LED_A 2
+ void Switch_On(unsigned char led) {
+ LED_On(led);
+ os_mut_wait(&mut_GLCD, 0xffff);
+ GLCD_SetBackColor(White);
+ GLCD_SetTextColor(Red);
+ GLCD_DisplayString(4, 2, 1, "LED ON");
+ GLCD_ClearLn(4, 2);
+ os_mut_release(&mut_GLCD);
+ }
+ void Switch_Off(unsigned char led) {
+ LED_Off(led);
+ os_mut_wait(&mut_GLCD, 0xffff);
+ GLCD_SetBackColor(White);
+ GLCD_SetTextColor(Red);
+ GLCD_DisplayString(4, 2, 1, "LED OFF");
+ GLCD_ClearLn(4, 2);
+ os_mut_release(&mut_GLCD);
+ }
+ __task void phaseA(void) {
+ for (;;) {
+ Switch_On(LED_A);
+ os_dly_wait(100);
+ Switch_Off(LED_A);
+ os_dly_wait(100);
+ }
+ }
+ __task void lcd(void) {
+ for (;;) {
+ os_mut_wait(&mut_GLCD, 0xffff);
+ GLCD_SetBackColor(Blue);
+ GLCD_SetTextColor(White);
+ GLCD_DisplayString(0, 0, 1, "Hello!");
+ os_mut_release(&mut_GLCD);
+ os_dly_wait(100);
+ os_mut_wait(&mut_GLCD, 0xffff);
+ GLCD_SetBackColor(Blue);
+ GLCD_SetTextColor(Red);
+ GLCD_DisplayString(1, 0, 1, "World");
+ os_mut_release(&mut_GLCD);
+ os_dly_wait(100);
+ }
+ 
+
+}
+ __task void init(void) {
+ os_mut_init(&mut_GLCD);
+ t_phaseA = os_tsk_create(phaseA, 0);
+ t_lcd = os_tsk_create(lcd, 0);
+ os_tsk_delete_self();
+ }
+ int main(void) {
+ LED_Init();
+ GLCD_Init();
+ GLCD_Clear(White);
+ os_sys_init(init);
+ }
+    // Listing 11: Blinky.c
+
+
+or 
+
+
+
+#include<RTL.h> 
+#include<LPC18xx.h> 
+#include “LED.h” 
+#include “GLCD.h” 
+OS_TID t_led,t_lcd; 
+OS_MUT mut_GLCD; 
+#define LED_A 2
+
+__task void led(void){ 
+While(1){ 
+LED_On(LED_A);
+os_mut_wait(&mut_GLCD,0xffff); 
+GLCD_SetBackColor(White); 
+GLCD_SetTextColor(Green);
+GLCD_DisplayChar(3,l,1,0x80+1);     //  1 for fill the round  
+os_mut_release(mut_GLCD); 
+os_dly_wait(100);
+
+LED_Off(LED_A); 
+os_mut_wait(&mut_GLCD,0xffff); 
+GLCD_SetBackColor(White); 
+GLCD_SetTextColor(Green); 
+GLCD_DisplayChar(3,1,1,0x80+0);  // 0 for emp  
+os_mut_release(mut_GLCD);
+os_dly_wait(100);
+
+}
+
+__task void lcd(void){ 
+While(1){ 
+os_mut_wait(&mut_GLCD,0xffff); 
+GLCD_SetBackColor(Blue); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,”Task  LCD”); 
+os_mut_release(mut_GLCD); 
+os_dly_wait(100); 
+
+os_mut_wait(&mut_GLCD,0xffff); 
+GLCD_SetBackColor(Black); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,”Task LCD”); 
+os_mut_release(mut_GLCD); 
+os_dly_wait(100); 
+}
+}
+
+__task void init(void){ 
+os_mut_init(&mut_GLCD); 
+t_led = os_tsk_create(led,0); 
+t_lcd = os_tsk_create(lcd,0); 
+os_tsk_delete_self(); 
+}
+
+int main(){ 
+LED_Init(); 
+GLCD_Init(); 
+GLCD_Clear(white); 
+os_sys_init(init); 
+}
+

@@ -1,0 +1,122 @@
+11. Create a ‘Blinky’ project using RL-ARM real time Kernel to simulate the operations of step
+motor driver. Use four LEDs blinking to simulate the activation of the four output driver stages. 
+Create other two tasks executing concurrently and competing for GLCD. The first task displays 
+status of LEDs blinking on GLCD and second task displays a string with changing colour of font and 
+background. Use suitable mechanism to protect shared resource.
+ Use APIs of RL-ARM real time 
+kernel.
+
+
+#include<RTL.h>
+#include<LPC18xx.h>
+#include"GLCD.h"
+#include"LED.h"
+
+OS_TID t_phaseA;
+OS_TID t_phaseB;
+OS_TID t_phaseC;
+OS_TID t_phaseD;
+OS_TID t_GLCD;
+OS_MUT mut_glcd;
+
+void Switch_On(unsigned char led)
+{
+	LED_On(led);
+	os_mut_wait(&mut_glcd,0xFFFF);
+	GLCD_SetBackColor(White);
+	GLCD_SetTextColor(Red);
+	GLCD_DisplayString(1,0,1,"LED ON");
+	os_mut_release(mut_glcd);
+	os_dly_wait(100);
+}
+void Switch_Off(unsigned char led)
+{
+	LED_Off(led);
+	os_mut_wait(&mut_glcd,0xFFFF);
+	GLCD_SetBackColor(White);
+	GLCD_SetTextColor(Red);
+	GLCD_DisplayString(1,0,1,"LED OFF");
+	os_mut_release(mut_glcd);
+	os_dly_wait(100);
+}
+__task void phaseA(void)
+{
+for(;;)
+	{
+	os_evt_wait_and(0x0001,0xFFFF);
+	Switch_On(2);
+	os_dly_wait(100);
+	os_evt_set(0x0001,t_phaseB);
+	Switch_Off(2);
+	os_dly_wait(100);
+	}
+}
+
+__task void phaseB(void)
+{
+for(;;)
+	{
+	os_evt_wait_and(0x0001,0xFFFF);
+	Switch_On(3);
+	os_dly_wait(100);
+	os_evt_set(0x0001,t_phaseC);
+	Switch_Off(3);
+	os_dly_wait(100);
+	}
+}
+
+__task void phaseC(void)
+{
+for(;;)
+{
+	os_evt_wait_and(0x0001,0xFFFF);
+	Switch_On(4);
+	os_dly_wait(100);
+	os_evt_set(0x0001,t_phaseD);
+	Switch_Off(4);
+	os_dly_wait(100);
+}
+}
+
+__task void phaseD(void)
+{
+for(;;)
+	{
+	os_evt_wait_and(0x0001,0xFFFF);
+	Switch_On(5);
+	os_dly_wait(100);
+	os_evt_set(0x0001,t_phaseA);
+	Switch_Off(5);
+	os_dly_wait(100);
+	}
+}
+
+__task void glcddisplay(void)
+{	for(;;)
+	{
+	os_mut_wait(&mut_glcd,0xFFFF);
+	GLCD_SetBackColor(Red);
+	GLCD_SetTextColor(Blue);
+	GLCD_DisplayString(1,0,1,"Hello");
+	os_mut_release(mut_glcd);
+	os_dly_wait(100);
+	}
+}
+__task void init(void)
+{
+	os_mut_init(&mut_glcd);
+	t_phaseA = os+tsk_create(phaseA,0);
+	t_phaseB = os+tsk_create(phaseB,0);
+	t_phaseC = os+tsk_create(phaseC,0);
+	t_phaseD = os+tsk_create(phaseD,0);
+	t_GLCD = os+tsk_create(glcddisplay,0);
+	os_evt_set(0x0001,t_phaseA);
+	os_tsk_delete_self();
+}
+int main(void)
+{
+	LED_Init();
+	GLCD_Init();
+	GLCD_Clear();
+	os_sys_init(init);
+}

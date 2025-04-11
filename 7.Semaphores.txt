@@ -1,0 +1,143 @@
+7.Semaphores
+ Createmultitaskingprogramtodemonstratetasksynchronization. Task1isexpectedtodis
+playLEDandequivalentLEDblinkingpatternonGLCDandTask2todisplaytextualmessage
+ onGLCD.SynchronizetheaccessofGLDusingsemaphoreAPIsofRL-RTX.
+
+
+  // code 
+
+ #include<RTL.h>
+ #include<LPC18xx.h>
+ #include "LED.h"
+ #include "GLCD.h"
+ #define LED_A 2
+ OS_TID t_led,t_lcd;
+ OS_SEM sem_GLCD;
+
+ __task void lcd(void){
+ while(1){
+ os_sem_wait(&sem_GLCD,0xffff);
+ GLCD_SetBackColor(Blue);
+ GLCD_SetTextColor(White);
+ GLCD_DisplayString(0,0,1,"Hello");
+ GLCD_DisplayString(1,0,1,"World");
+ os_sem_send(&sem_GLCD);
+ os_dly_wait(100);
+ os_sem_wait(&sem_GLCD,0xffff);
+ GLCD_SetBackColor(Black);
+ GLCD_SetTextColor(White);
+ GLCD_DisplayString(0,0,1,"RVCE");
+ GLCD_DisplayString(1,0,1,"VLSI & ES");
+ os_sem_send(&sem_GLCD);
+ os_dly_wait(100);
+ }
+ }
+
+ void Switch_Off(unsigned char led){
+ LED_Off(led);
+ os_sem_wait(&sem_GLCD,0xffff);
+ GLCD_SetBackColor(White);
+ GLCD_SetTextColor(Green);
+ GLCD_DisplayChar(3,led+5,1,0x80+0);
+ os_sem_send(&sem_GLCD);
+ }
+ void Switch_On(unsigned char led){
+ LED_On(led);
+ os_sem_wait(&sem_GLCD,0xffff);
+ GLCD_SetBackColor(White);
+ GLCD_SetTextColor(Green);
+ GLCD_DisplayChar(3,led+5,1,0x80+1);
+ os_sem_send(&sem_GLCD);
+ }
+ __task void phaseA(void){
+ while(1){
+ Switch_On(LED_A);
+ os_dly_wait(100);
+ Switch_Off(LED_A);
+ os_dly_wait(100);
+ }
+ }
+ __task void init(void){
+ os_sem_init(&sem_GLCD,1);
+ t_led = os_tsk_create(phaseA,0);
+ 
+t_lcd = os_tsk_create(lcd,0);
+ os_tsk_delete_self();
+ }
+ int main(){
+ LED_Init();
+ GLCD_Init();
+ GLCD_Clear(White);
+ os_sys_init(init);
+ }
+
+   //  Listing 12: Blinky.c
+
+
+
+
+or
+
+
+#include<RTL.h> 
+#include<LPC18xx.h> 
+#include “LED.h” 
+#include “GLCD.h” 
+OS_TID t_led, t_lcd; 
+OS_SEM sem_GLCD; 
+#define LED_A 2
+
+__task void led(void){ 
+While(1){ 
+LED_On(LED_A);
+os_sem_wait(&sem_GLCD,0xffff); 
+GLCD_SetBackColor(White); 
+GLCD_SetTextColor(Green);
+GLCD_DisplayChar(3,l,1,0x80+1);     //  1 for fill the round  
+os_sem_send(sem_GLCD); 
+os_dly_wait(100);
+
+LED_Off(LED_A); 
+os_mut_wait(&sem_GLCD,0xffff); 
+GLCD_SetBackColor(White); 
+GLCD_SetTextColor(Green); 
+GLCD_DisplayChar(3,1,1,0x80+0);  // 0 for emp  
+os_sem_send(sem_GLCD);
+os_dly_wait(100);
+
+}
+
+__task void lcd(void){ 
+While(1){ 
+os_sem_wait(&sem_GLCD,0xffff); 
+GLCD_SetBackColor(Blue); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,”Task  LCD”); 
+os_sem_send(sem_GLCD); 
+os_dly_wait(100); 
+
+os_sem_wait(&sem_GLCD,0xffff); 
+GLCD_SetBackColor(Black); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,”Task LCD”); 
+os_sem_send(sem_GLCD); 
+os_dly_wait(100); 
+}
+}
+
+__task void init(void){ 
+os_sem_init(&sem_GLCD,1);     // 1 - token value 
+t_led = os_tsk_create(led,0); 
+t_lcd = os_tsk_create(lcd,0); 
+os_tsk_delete_self(); 
+}
+
+int main(){ 
+LED_Init(); 
+GLCD_Init(); 
+GLCD_Clear(white); 
+os_sys_init(init); 
+}
+ 
+
+

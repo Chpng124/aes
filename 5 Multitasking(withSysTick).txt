@@ -1,0 +1,139 @@
+5 Multitasking(withSysTick)
+
+ Createamultitaskingapplicationprogramtodemonstratethecreationofconcurrentlyexecut
+ingtasks. Task1isexpectedtocontrol theblinkingof twoLEDs,andTask2istochangethe
+ fontandcolorof thetextualdisplayonGLCDconcurrently. UseAPIsofRL-RTXreal-time
+ kernel.ConfiguretheSysTicktimersuitablytogeneratetickintervals.
+
+
+         // code
+ #include <RTL.h>
+ #include <LPC18xx.h>
+ #include "GLCD.h"
+ #include "LED.h"
+ OS_TID t_led,t_lcd;
+ #define LED_A 2
+ #define LED_B 3
+ uint32_t LEDOn;
+ uint32_t LEDOff;
+ int32_t max_num = 7;
+ int32_t num = 0;
+ int32_t dir = 1;
+ void Switch_On(unsigned char led){
+ LED_On(led);
+ }
+ void Switch_Off(unsigned char led){
+ LED_Off(led);
+ }
+ void SysTick_Handler(void)
+ {
+ static uint32_t ticks;
+ switch (ticks++){
+ case 0:LEDOn = 1; break;
+ case 5:LEDOff = 1; break;
+ case 9:ticks = 0; break;
+ default: if(ticks > 10)
+ ticks = 10;
+ }
+ }
+ __task void phaseA(void){
+ while(1){
+ if(LEDOn){
+ LEDOn=0;
+ LED_On(num);
+ }
+ if(LEDOff){
+ LEDOff = 0;
+ LED_Off(num);
+ num+=dir;
+ if(dir==1 && num == max_num)
+ dir =-1;
+ else if(num == 0)
+ dir =1;
+ }
+ }
+ }
+ __task void lcd(void){
+ while(1){
+ GLCD_SetBackColor(Blue);
+ GLCD_SetTextColor(White);
+ GLCD_DisplayString(0,0,1,"ABCD");
+ GLCD_DisplayString(1,0,1,"EFGH");
+ os_dly_wait(100);
+ GLCD_SetBackColor(Black);
+ GLCD_SetTextColor(White);
+ GLCD_DisplayString(0,0,0,"ABCD");
+ GLCD_DisplayString(1,0,0,"EFGH");
+ 
+os_dly_wait(100);
+ }
+ }
+ __task void init(void){
+ t_led = os_tsk_create(phaseA,0);
+ t_lcd = os_tsk_create(lcd,0);
+ os_tsk_delete_self();
+ }
+ int main(){
+ LED_Init();
+ GLCD_Init();
+ GLCD_Clear(White);
+ SysTick_Config(SystemCoreClock/10);
+ os_sys_init(init);
+ }
+           // Listing 10: Blinky.c
+
+
+
+
+
+
+
+or 
+
+
+#include<RTL.h> 
+#include<LPC18xx.h> 
+#include “LED.h” 
+#include “GLCD.h” 
+OS_TID t_led,t_lcd; 
+#define LED_A 2
+#define LED_B 3
+
+
+__task void led(void){ 
+While(1){ 
+LED_On(LED_A);
+LED_On(LED_B);
+os_dly_wait(100);
+LED_Off(LED_A); 
+LED_Off(LED_B); 
+os_dly_wait(100);
+
+}
+
+__task void lcd(void){ 
+While(1){ 
+GLCD_SetBackColor(Blue); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,”Task  LCD”); 
+os_dly_wait(100); 
+
+GLCD_SetBackColor(Black); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,”Task LCD”); 
+os_dly_wait(100); 
+}
+}
+
+__task void init(void){ 
+t_led = os_tsk_create(led,0); 
+t_lcd = os_tsk_create(lcd,0); 
+os_tsk_delete_self(); 
+}
+
+int main(){ 
+LED_Init(); 
+GLCD_Init(); 
+GLCD_Clear(white); 
+os_sys_init(init); 
+}

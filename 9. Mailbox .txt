@@ -1,0 +1,56 @@
+9. Mailbox 
+Create multitasking program to demonstrate IPC using mailbox. Create a task to read a digital 
+value from ADC and send to another task executing concurrently through mailbox. Synchronize the 
+execution of tasks. Use APIs of RL-ARM real time kernel.
+
+
+#include<RTL.h> 
+#include<LPC18xx.h> 
+#include “GLCD.h” 
+#include “ADC.h” 
+#include <stdio.h> 
+#include <string.h> 
+
+OS_TID t_adc, t_glcd; 
+Int32_t adcval; 
+OS_MBX mailbox; 
+os_mbx_declare(mailbox,1); 
+
+Int main(){ 
+GLCD_Init(); 
+GLCD_Clear(White); 
+ADC_Init(); 
+os_mbx_init(&mailbox,4); 
+os_sys_init(init); 
+} 
+
+__task void init(void){ 
+t_adc=os_tsk_create(adcread,0); 
+t_lcd=os_tsk_create(lcd,0); 
+os_tsk_delete_self(); 
+}
+
+
+__task void adcread(void){ 
+char acbuf[10]; 
+While(1){ 
+ADC_StartCnv(); 
+adcval=ADC_GetVal(); 
+strcpy(acbuf, ” “); 
+sprintf(acbuf,”  %d “,adcval); 
+os_mbx_send(mailbox, (void *)acbuf,100); 
+os_dly_wait(); 
+} 
+} 
+__task void lcd(void){ 
+void * message_ptr; 
+while(1){ 
+os_mbx_wait(mailbox,&message_ptr,0xffff); 
+GLCD_SetBackColor(Blue); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,(unsigned char 
+*)message_ptr); 
+os_dly_wait(100); 
+} 
+} 
+

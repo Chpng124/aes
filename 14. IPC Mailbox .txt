@@ -1,0 +1,74 @@
+14. Create multitasking program to demonstrate IPC using mailbox. Create a task to read 
+a push button status and send to another task executing concurrently through mailbox. 
+Other task is expected to read the status of the button from mailbox and display 
+“Closed” and “Open” on GLCD.  Synchronize the execution of tasks. Use APIs of 
+RL-ARM real time kernel. 
+
+
+  // code
+ 
+#include <RTL.h> 
+#include <LPC18xx.h> 
+#include "GLCD.h" 
+#include "LED.h"  
+OS_MBX mailbox; 
+OS_TID tid_button_task, tid_display_task; 
+int button_status; 
+#define BUTTON_CLOSED 0 
+#define BUTTON_OPEN 1 
+int main()  
+{ 
+    GLCD_Init(); 
+    GLCD_Clear(White); 
+    KEY_Init(); 
+    os_sys_init(init); 
+} 
+ 
+__task void init(void)  
+{ 
+    os_mbx_init(&mailbox, 4);  
+    os_mbx_declare(mailbox,1); 
+    tid_button_task = os_tsk_create(button_task, 0); 
+    tid_display_task = os_tsk_create(display_task, 0); 
+    os_tsk_delete_self(); 
+} 
+ 
+
+__task void button_task(void) 
+
+ { 
+    while (1) { 
+        if ((LPC_GPIO_PORT->PIN[2] & 8) == 0)  
+          { 
+            button_status = BUTTON_CLOSED;
+    } else 
+          { 
+            button_status = BUTTON_OPEN; 
+          } 
+        os_mbx_send(&mailbox, (void *) button_status, 100); 
+        os_dly_wait(100); 
+    } 
+} 
+ 
+__task void display_task(void) 
+
+ { 
+    void* message_ptr; 
+    OS_RESULT result; 
+    while (1)  
+        result = os_mbx_wait(&mailbox, &message_ptr,0xffff); 
+        if (result == OS_R_MBX) 
+          { 
+            GLCD_Clear(White); 
+            if (*(int*)message_ptr == BUTTON_CLOSED) 
+              { 
+                GLCD_SetTextColor(Green); 
+                GLCD_DisplayString(0, 0, 1, "Closed"); 
+            } else 
+              { 
+                GLCD_SetTextColor(Red); 
+                GLCD_DisplayString(0, 0, 1, "Open"); 
+            } 
+        } 
+    } 
+}

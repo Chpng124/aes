@@ -1,0 +1,7 @@
+12.  ADC bargph
+ Write driver for ADC0 in LPC 1857 MCU. Display digital value on GLCD in bar 
+graph such that length is directly proportional to ADC value.   Write driver functions 
+for ADC initialization, ADC start of conversion, reading digital value output. 
+Develop main function using APIs of ADC driver to test the functionality.  
+
+

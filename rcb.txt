@@ -1,0 +1,452 @@
+bit
+#include<stdio.h>
+#include<string.h>
+
+int main()
+{
+    char ch[50], stuffed[100],destuffed[100]; 
+    char flag[50] = "01111110"; 
+    int i, j = 0, count = 0;
+
+    printf("Enter the data to be transmitted: ");
+    scanf("%s", ch); 
+
+    printf("Entered data: %s\n", ch);
+
+    for (i = 0; ch[i] != '\0'; i++) 
+    {
+        stuffed[j++] = ch[i]; 
+
+        if (ch[i] == '1') 
+            count++;
+        else 
+            count = 0;
+
+        if (count == 5) 
+        {
+            stuffed[j++] = '0'; 
+            count = 0; // 
+        }
+    }
+    stuffed[j] = '\0'; 
+
+    char finaldata[100];
+strcpy(finaldata,flag);
+strcat(finaldata,stuffed);
+strcat(finaldata,flag);
+
+printf("transmitted dat after stuffing is %s",finaldata);
+j = 0; 
+count = 0;  
+for (i = 0; stuffed[i] != '\0'; i++) {
+    destuffed[j++] = stuffed[i];  
+har
+    if (stuffed[i] == '1') {
+        count++;
+    } else {
+        count = 0;  
+    }
+    if (count == 5 && stuffed[i + 1] == '0') {
+        i++;  
+        count = 0; 
+    }
+}
+destuffed[j] = '\0';  
+printf("\nDestuffed data: %s", destuffed);
+}
+
+
+
+
+
+char
+
+
+#include<stdio.h>
+#include<string.h>
+#define DLE 16
+#define STX 2
+#define ETX 3
+int main()
+{
+char ch;
+char arr[100]={DLE,STX};
+int i=2,j;
+printf("\n Enter the data stream(CTRL+B->STX,CTRL+C->ETX,CTRL+P->DLE):\n");
+do
+{
+scanf("%c", &ch);
+printf("char is ",ch);
+if(ch=='\n')
+break;
+if(ch==DLE)
+{
+arr[i++]=DLE;
+printf("DLE");
+}
+else if(ch==2)
+printf("STX");
+else if(ch==3)
+printf("ETX");
+else
+printf("%c",ch);
+arr[i++]=ch;
+}while(ch!='\n');
+arr[i++]=DLE;
+arr[i++]=ETX;
+printf("\n The stuffed stream is \n");
+for(j=0;j<i;j++)
+{
+if(arr[j]==DLE)
+printf("DLE");
+else if(arr[j]==STX)
+printf("STX");
+else if(arr[j]==ETX)
+printf("ETX");
+else
+printf("%c",arr[j]);
+}
+printf("\n The de-stuffed data is \n");
+for(j=2;j<i-2;j++)
+{
+if(arr[j]==DLE)
+{
+printf("DLE");
+j++;
+}
+else if(arr[j]==STX)
+printf("STX");
+else if(arr[j]==ETX)
+printf("ETX");
+else
+printf("%c",arr[j]);
+}
+return 0;
+}
+
+
+RESULT:
+Enter the data stream(CTRL+B->STX,CTRL+C->ETX,CTRL+P->DLE):
+ABCDLEE
+The stuffed stream is
+DLESTXABCDLEEDLEETX
+The de-stuffed data is
+ABCDLEE
+
+
+
+crc
+
+
+#include <stdio.h>
+#include <string.h>
+
+int main() 
+{
+    int i, j;
+    char data[200], div[100], temp[100], quotient[200], remainder[100];
+    int datalen, divlen;
+
+    printf("Enter the data: ");
+    scanf("%s", data);
+
+    printf("Enter the generator polynomial: ");
+    scanf("%s", div);
+
+    datalen = strlen(data);
+    divlen = strlen(div);
+
+    printf("Length of data: %d\n", datalen);
+    printf("Length of generator polynomial: %d\n", divlen);
+    for (i = 0; i < divlen - 1; i++) {
+        data[datalen + i] = '0';
+    }
+    data[datalen + divlen - 1] = '\0';
+
+    printf("The padded data is: %s\n", data);
+    strncpy(temp, data, divlen);
+    temp[divlen] = '\0';
+
+    for (i = 0; i < datalen; i++) {
+        if (temp[0] == '1') {
+            quotient[i] = '1';
+            for (j = 0; j < divlen; j++) {
+                temp[j] = (temp[j] == div[j]) ? '0' : '1';
+            }
+        } else {
+            quotient[i] = '0';
+        }
+        for (j = 0; j < divlen - 1; j++) {
+            temp[j] = temp[j + 1];
+        }
+        temp[divlen - 1] = data[i + divlen];
+    }
+    quotient[datalen] = '\0'; 
+
+    strcpy(remainder, temp);
+
+    printf("The quotient is: %s\n", quotient);
+    printf("The remainder is: %s\n", remainder);
+    printf("\nEnter another data string: ");
+    scanf("%s", data);
+
+    datalen = strlen(data);
+    strncpy(temp, data, divlen);
+    temp[divlen] = '\0';
+
+    for (i = 0; i < datalen; i++) {
+        if (temp[0] == '1') {
+            quotient[i] = '1';
+            for (j = 0; j < divlen; j++) {
+                temp[j] = (temp[j] == div[j]) ? '0' : '1';
+            }
+        } else {
+            quotient[i] = '0';
+        }
+        for (j = 0; j < divlen - 1; j++) {
+            temp[j] = temp[j + 1];
+        }
+        temp[divlen - 1] = data[i + divlen];
+    }
+    quotient[datalen] = '\0'; 
+
+    strcpy(remainder, temp);
+
+    printf("The quotient is: %s\n", quotient);
+    printf("The remainder is: %s\n", remainder);
+    return 0;
+}
+
+
+
+
+prims
+
+
+
+#include<stdio.h>
+#define infinity 999
+int prime(int cost[10][10],int source, int n)
+{
+int i,j,sum=0,visited[10],cmp[10],vertex[10];
+int min,u,v;
+for(i=1;i<=n;i++)
+{
+vertex[i]=source;
+visited[i]=0;
+cmp[i]=cost[source][i];
+}
+visited[source]=1;
+for(i=1;i<=n-1;i++)
+{
+min=infinity;
+for(j=1;j<=n;j++)
+if(!visited[j] && cmp[j]<min)
+{
+min=cmp[j];
+u=j;
+}
+visited[u]=1;
+sum=sum+cmp[u];
+printf("\n %d -> %d sum=%d",vertex[u],u,cmp[u]);
+for(v=1;v<=n;v++)
+if(!visited[v] && cost[u][v] < cmp[v])
+{
+cmp[v]=cost[u][v];
+vertex[v]=u;
+}
+}
+return sum;
+}
+void main()
+{
+int a[10][10],n,i,j,m,source;
+printf("\n Enter the number of vertices:");
+scanf("%d",&n);
+printf("\n Enter the cost matrix:0 self loop & 999 no edge\n");
+for(i=1;i<=n;i++)
+for(j=1;j<=n;j++)
+scanf("%d",&a[i][j]);
+for(i=1;i<=n;i++)
+for(j=1;j<=n;j++)
+if(a[i][j]!=a[j][i]||(a[i][i]!=0))
+{
+printf("\n Invalid entry \n cost matrix should be symmetrical & the diagonal elements are zero");
+}
+printf("\n Enter the source:");
+scanf("%d",&source);
+m=prime(a,source,n);
+printf("\n\n total cost=%d",m);
+}
+
+
+RESULT:
+Enter the number of vertices:5
+Enter the cost matrix:0 self loop & 999 no edge
+0 2 3 999 999
+2 0 999 4 999
+3 999 0 5 2
+999 4 5 0 3
+999 999 2 3 0
+Enter the source:1
+1 -> 2 sum=2
+1 -> 3 sum=3
+3 -> 5 sum=2
+5 -> 4 sum=3
+total cost=10
+
+
+
+
+krus
+
+
+#include<string.h>
+#include<stdio.h>
+struct node
+{
+int set;
+}
+node[100];
+struct edge
+{
+int first_node,second_node,selected,distance;
+}
+e[100];
+int edge_count=0;
+void getdata(int index,int total)
+{
+int i;
+for(i=index;i<total;i++)
+{
+if(i!=index)
+{
+printf("\nenter distance between vertex %c and %c",index+65,i+65);
+scanf("%d", &e[edge_count].distance);
+e[edge_count].first_node=index;
+e[edge_count].second_node=i;
+++edge_count;
+}
+}
+}
+void init(int total)
+{
+int i;
+for(i=0;i<total;i++)
+node[i].set=i;
+for(i=0;i<edge_count;i++)
+e[i].selected=1;
+}
+void sort()
+{
+int i,j;
+struct edge temp;
+for (i=0;i<edge_count-i;i++)
+for (j=0;j<edge_count-i-1;j++)
+if(e[j].distance>e[j+1].distance)
+{
+temp=e[j];
+e[j]=e[j+1];
+e[j+1]=temp;
+}}
+void main()
+{
+int i,total,j,k,m,n,edgeselected=0,node1,noder;
+printf("enter the number of nodes");
+scanf("%d",&total);
+for(i=0;i<total;i++)
+getdata(i,total);
+init(total);
+sort();
+printf("\n the sorted order of edges:");
+for (i=0;i<edge_count;i++)
+printf("\nedge: %d first_node:%C second_node: %c distance: %d",i,e[i].first_node+65,e[i].second_node+65,e[i].distance);
+i=0;
+do
+{
+e[i].selected=1;
+node1=e[i].first_node;
+noder=e[i].second_node;
+if(node[node1].set==node[noder].set)
+e[i].selected=-1;
+else
+{
+edgeselected++;
+m=node[node1].set;
+k=node[noder].set;
+for(n=0;n<total;n++)
+{
+if(node[n].set==k)
+node[n].set=m;
+}
+}
+i++;
+}
+while(edgeselected<total-1);
+printf("\n minimum spanning tree is:");
+for(i=0;i<edge_count;i++)
+{
+if(e[i].selected==1)
+printf("\n%c<---->%c distance %d",e[i].first_node+65,e[i].second_node+65,e[i].distance);
+}
+}
+
+
+
+
+
+
+leaky
+
+
+
+
+
+
+#include <stdio.h>
+#include <unistd.h>
+
+#define BUCKET_SIZE 10  
+#define OUTPUT_RATE 3    
+
+void print_row(int step, int packet, int before, int after, int processed, int left, int overflow) {
+    printf("\t %4d \t %13d \t %13d \t %13d \t %10d \t %11d \t %8d \t\n", step, packet, before, after, processed, left, overflow);
+   // printf("+------+---------------+---------------+---------------+------------+-------------+----------+\n");
+}
+
+void leaky_bucket(int packets[], int n) {
+    int bucket = 0;
+    //printf("\n+------+---------------+---------------+---------------+------------+-------------+----------+\n");
+    printf("\t Step \t Packet Arrives \t Bucket Before \t Bucket After  \t Processing \t Bucket Left \t Overflow\n");
+    //printf("+------+---------------+---------------+---------------+------------+-------------+----------+\n");
+int i=0;
+    for (i = 0; i < n || bucket > 0; i++) {
+        int packet = (i < n) ? packets[i] : 0;
+        int before = bucket, overflow = 0;
+        bucket = (packet + bucket > BUCKET_SIZE) ? (overflow = packet + bucket - BUCKET_SIZE, BUCKET_SIZE) : bucket + packet;
+        int processed = (bucket < OUTPUT_RATE) ? bucket : OUTPUT_RATE;
+        bucket -= processed;
+        print_row(i + 1, packet, before, bucket, processed, bucket, overflow);
+        sleep(1);
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter number of packets: ");
+    scanf("%d", &n);
+    int packets[n];
+    printf("Enter packet sizes: ");
+    int i=0;
+    for (i = 0; i < n; i++) scanf("%d", &packets[i]);
+    leaky_bucket(packets, n);
+    return 0;
+}
+
+
+
+crc
+
+
+
+ 
