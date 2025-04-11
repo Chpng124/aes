@@ -11,41 +11,58 @@ stratetheanalogsensor interface.Writedriver functions forADCinitialization,ADCst
  #include "ADC.h"
  #define ADC_BITS 10
  #define ADC_TOUT 2000000
- static volatile uint16_t AD_last;
- static volatile uint8_t AD_done;
+// static volatile uint16_t AD_last;
+//static volatile uint8_t AD_done;
  #define CCU_CLK_CFG_RUN (1 << 0)
  #define CCU_CLK_CFG_AUTO (1 << 1)
  #define CCU_CLK_STAT_RUN (1 << 0)
+
  void ADC_Init(void);
  void ADC_StartCnv(void);
  int32_t ADC_GetVal(void);
- void ADC0_IRQHandler(void);
+ // void ADC0_IRQHandler(void);
  void delay_ms(uint32_t ms);
+
  void ADC_Init(void) {
  LPC_CCU1->CLK_APB3_ADC0_CFG = CCU_CLK_CFG_AUTO | CCU_CLK_CFG_RUN;
  while (!(LPC_CCU1->CLK_APB3_ADC0_STAT & CCU_CLK_STAT_RUN));
  LPC_ADC0->CR = (1UL << 1) | (2UL << 8) | (1UL << 21);
  LPC_ADC0->INTEN |= (1UL << 1);
- NVIC_EnableIRQ(ADC0_IRQn);
+  // NVIC_EnableIRQ(ADC0_IRQn);
  }
+
  void ADC_StartCnv(void) {
- AD_done = 0;
+  // AD_done = 0;
  LPC_ADC0->CR |= (1UL << 24); /* Start conversion */
  }
+
+ int32_t ADC_GetVal(void) {
+ int32_t i; 
+int16_t digital_val;
+ for (i = ADC_TOUT; i; i--);
+digital_val = = (LPC_ADC0->DR[1] >> 6) & 0x3FF;
+ }
+
+/*
  int32_t ADC_GetVal(void) {
  int32_t i;
  for (i = ADC_TOUT; i; i--) {
  if (AD_done) {
  return (AD_last);
- }
+ } 
  }
  return-1;
  }
+
+
  void ADC0_IRQHandler(void) {
  LPC_ADC0->GDR; /* Clear IRQ request flag */
  AD_last = (LPC_ADC0->DR[1] >> 6) & 0x3FF; /* Read value */
  AD_done = 1;
  }
+
+*/
+
  void delay_ms(uint32_t ms) {
  volatile uint32_t count;
  while (ms--) {
@@ -61,6 +78,8 @@ stratetheanalogsensor interface.Writedriver functions forADCinitialization,ADCst
  #include <stdio.h>
  #include "ADC.h"
  #include "GLCD.h"
+
+
  int main(void) {
  char acBuf[10];
  int adcVal;
@@ -72,6 +91,7 @@ stratetheanalogsensor interface.Writedriver functions forADCinitialization,ADCst
  GLCD_DisplayString(0, 0, 1, " RVECE ");
  GLCD_DisplayString(1, 0, 1, " ADC ");
  GLCD_DisplayString(3, 0, 1, " AD value: ");
+
  while (1) {
  ADC_StartCnv();
  adcVal = ADC_GetVal();
