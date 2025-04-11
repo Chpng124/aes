@@ -54,13 +54,7 @@ char actmsg[30];
     KEY_Init();
     GLCD_Init();
     GLCD_Clear(White);
-    Void KEY_Init()
-{
-    LPC_SCU->SFSP4_0 = ((1UL<<6) | 0);
-    LPC_SCU->SFSP4_3 = (1UL<<6 | 0);
-    LPC_SCU->SFSP4_4 = (1UL<<6 | 0);
-    LPC_GPIO_PORT->DIR[2] &= 0xFFFFFFE6;
-}
+
    while(1) {
         if((LPC_GPIO_PORT->PIN[2] & 8) == 0) {
             TH_GetTemp(&therm);
@@ -69,4 +63,10 @@ char actmsg[30];
             GLCD_DisplayString(3, 0, 1, actmsg);
         }
     }
+    Void KEY_Init()
+{
+    LPC_SCU->SFSP4_0 = ((1UL<<6) | 0);
+    LPC_SCU->SFSP4_3 = (1UL<<6 | 0);
+    LPC_SCU->SFSP4_4 = (1UL<<6 | 0);
+    LPC_GPIO_PORT->DIR[2] &= 0xFFFFFFE6;
 }
