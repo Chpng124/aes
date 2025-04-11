@@ -5,3 +5,88 @@ for ADC initialization, ADC start of conversion, reading digital value output.
 Develop main function using APIs of ADC driver to test the functionality.  
 
 
+ #include <LPC18xx.h>
+ #include "ADC.h"
+ #include "RTL.h"
+ #include "GLCD.h"
+ #include <string.h>
+
+ OS_TID t_adc, t_glcd;\
+ #define ADC_BITS 10
+ #define ADC_TOUT 2000000
+
+ static volatile uint16_t AD_last;
+ static volatile uint8_t AD_done;
+ uint32_t adcVal=0;
+
+ #define CCU_CLK_CFG_RUN (1 << 0)
+ #define CCU_CLK_CFG_AUTO (1 << 1)
+ #define CCU_CLK_STAT_RUN (1 << 0)
+
+
+ void ADC_Init(void) {
+ LPC_CCU1->CLK_APB3_ADC0_CFG = CCU_CLK_CFG_AUTO | CCU_CLK_CFG_RUN;
+ while (!(LPC_CCU1->CLK_APB3_ADC0_STAT & CCU_CLK_STAT_RUN));
+ LPC_ADC0->CR = (1UL << 1) | (2UL << 8) | (1UL << 21);
+ LPC_ADC0->INTEN |= (1UL << 1);
+ NVIC_EnableIRQ(ADC0_IRQn);
+ }
+
+
+ void ADC_StartCnv(void) {
+ AD_done = 0;
+ LPC_ADC0->CR |= (1UL << 24); 
+ }
+
+
+ int32_t ADC_GetVal(void) {
+ int32_t i;
+ for (i = ADC_TOUT; i; i--) {
+ if (AD_done) {
+ return (AD_last);
+ }
+ }
+ return-1;
+ }
+
+ void ADC0_IRQHandler(void) {
+ LPC_ADC0->GDR; 
+ AD_last = (LPC_ADC0->DR[1] >> 6) & 0x3FF;
+ AD_done = 1;
+ }
+
+
+__task void adc(void){ 
+char acbuf[20];
+for(;;) { 
+ADC_StartCnv(); 
+adcVal=ADC_GetVal();  
+sprintf(acbuf,”  %d “,adcVal); 
+os_dly_wait(); 
+} 
+
+
+__task void lcd(void){ 
+for(;;) { 
+GLCD_SetBackColor(Blue); 
+GLCD_SetTextColor(White); 
+GLCD_DisplayString(0,0,1,”Temp Val : ”); 
+GLCD_BarGraph(5, 5, 100, 20, adcVal/1024);
+os_dly_wait(100); 
+} 
+
+
+__task void init(void) {
+t_adc = os_tsk_create(adc,0); 
+t_glcd = os_tsk_create(lcd,0); 
+os_tsk_delete_self(); 
+}
+
+ int main(void) {
+ ADC_Init();
+ GLCD_Init();
+ GLCD_Clear(White);
+ os_sys_init(init);
+}
+
+
