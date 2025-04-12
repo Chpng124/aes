@@ -30,22 +30,29 @@ Uint32_t I2C_RdData(uint8_t addr, uint8_t secByte, uint8_t *buf, uint32_t cnt)
 }
 
 #include <TH_LM75.h>
-#define TH_I2C_ADDR   0x48
+//  #define TH_I2C_ADDR   0x48
 TH_DATA therm;
-#define REG_TEMP     0x00
-#define REG_CONF     0x01
-#define REG_THYS     0x02
-#define REG_TOS      0x03
+// #define REG_TEMP     0x00
+  // #define REG_CONF     0x01
+// #define REG_THYS     0x02
+//  #define REG_TOS      0x03
+
+
 Uint32_t TH_Init(void) {
     Uint8_t val[2];
     val[0] = 0;
-    I2C_WrData(TH_I2C_ADDR, REG_CONF, val, 1);
+    I2C_WrData(0x48, 0x01, val, 1);
 }
+
+
 uint16_t TH_GetTemp(TH_DATA *thData) {
     uint8_t val[2];
-    I2C_RdData(TH_I2C_ADDR, REG_TEMP, val, 1);
+    I2C_RdData(0x48, 0x00
+, val, 1);
     thData->Temp = (val[0] << 8) | ((val[1] & 0x80);
 }
+
+
 int main(void) {
     float temp; 
 char actmsg[30];
