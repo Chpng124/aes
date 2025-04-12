@@ -26,7 +26,7 @@ stratetheanalogsensor interface.Writedriver functions forADCinitialization,ADCst
  void ADC_Init(void) {
  LPC_CCU1->CLK_APB3_ADC0_CFG = CCU_CLK_CFG_AUTO | CCU_CLK_CFG_RUN;
  while (!(LPC_CCU1->CLK_APB3_ADC0_STAT & CCU_CLK_STAT_RUN));
- LPC_ADC0->CR = (1UL << 1) | (2UL << 8) | (1UL << 21);
+
  LPC_ADC0->INTEN |= (1UL << 1);
   // NVIC_EnableIRQ(ADC0_IRQn);
  }
